@@ -1,0 +1,1076 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Archive Lock — Secure Your Silence</title>
+<style>
+  :root{
+    --bg:#02060a;
+    --cyan:#00f0ff;
+    --cyan-dim:#0a8f99;
+    --green:#00ff9d;
+    --water:#0affc4;
+    --danger:#ff2d6b;
+    --text:#c8f7ff;
+    --muted:#5b8a94;
+    --glass:rgba(6,20,26,0.55);
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  /* ---- disable text selection / blue highlight everywhere ---- */
+  *{
+    -webkit-user-select:none;
+    -moz-user-select:none;
+    -ms-user-select:none;
+    user-select:none;
+    -webkit-tap-highlight-color:transparent;
+  }
+  ::selection{background:transparent;color:inherit}
+  ::-moz-selection{background:transparent;color:inherit}
+  img{-webkit-user-drag:none;user-drag:none}
+  html,body{width:100%;overflow-x:hidden}
+  body{
+    background:var(--bg);
+    color:var(--text);
+    font-family:"Segoe UI",system-ui,sans-serif;
+    line-height:1.6;
+    position:relative;
+    min-height:100vh;
+  }
+
+  /* ---------- Animated background canvases ---------- */
+  #matrix,#water{
+    position:fixed;inset:0;width:100%;height:100%;
+    z-index:0;pointer-events:none;
+  }
+  #matrix{opacity:0.18}
+  #water{opacity:0.55;mix-blend-mode:screen}
+
+  /* grid overlay */
+  .grid-overlay{
+    position:fixed;inset:0;z-index:0;pointer-events:none;
+    background:
+      linear-gradient(rgba(0,240,255,0.04) 1px,transparent 1px),
+      linear-gradient(90deg,rgba(0,240,255,0.04) 1px,transparent 1px);
+    background-size:44px 44px;
+    mask:radial-gradient(circle at 50% 30%,#000 0%,transparent 75%);
+    -webkit-mask:radial-gradient(circle at 50% 30%,#000 0%,transparent 75%);
+    animation:gridpan 20s linear infinite;
+  }
+  @keyframes gridpan{from{background-position:0 0}to{background-position:44px 44px}}
+
+  .vignette{
+    position:fixed;inset:0;z-index:1;pointer-events:none;
+    background:radial-gradient(ellipse at 50% 40%,transparent 40%,rgba(0,0,0,0.75) 100%);
+  }
+
+  .content{position:relative;z-index:2}
+
+  /* ---------- Nav ---------- */
+  nav{
+    display:flex;align-items:center;justify-content:space-between;
+    padding:22px 6vw;position:sticky;top:0;z-index:20;
+    backdrop-filter:blur(8px);
+    background:linear-gradient(180deg,rgba(2,6,10,0.85),transparent);
+  }
+  .brand{display:flex;align-items:center;gap:12px;font-weight:800;letter-spacing:1px}
+  .brand .logo{
+    width:38px;height:38px;border-radius:10px;
+    display:grid;place-items:center;font-size:20px;
+    background:linear-gradient(135deg,var(--cyan-dim),#03252b);
+    border:1px solid rgba(0,240,255,0.4);
+    box-shadow:0 0 18px rgba(0,240,255,0.35),inset 0 0 12px rgba(0,240,255,0.2);
+    animation:logopulse 3s ease-in-out infinite;
+  }
+  @keyframes logopulse{50%{box-shadow:0 0 30px rgba(0,240,255,0.6),inset 0 0 16px rgba(0,240,255,0.35)}}
+  .brand span{color:var(--cyan);text-shadow:0 0 14px rgba(0,240,255,0.6)}
+  .nav-links{display:flex;gap:28px;font-size:14px}
+  .nav-links a{
+    color:var(--muted);text-decoration:none;position:relative;
+    transition:color .3s;text-transform:uppercase;letter-spacing:1.5px;
+  }
+  .nav-links a::after{
+    content:"";position:absolute;left:0;bottom:-6px;height:1px;width:0;
+    background:var(--cyan);box-shadow:0 0 8px var(--cyan);transition:width .3s;
+  }
+  .nav-links a:hover{color:var(--cyan)}
+  .nav-links a:hover::after{width:100%}
+  @media(max-width:640px){.nav-links{display:none}}
+
+  /* ---------- Hero ---------- */
+  header{
+    min-height:92vh;display:flex;flex-direction:column;
+    align-items:center;justify-content:center;text-align:center;
+    padding:40px 6vw 60px;position:relative;
+  }
+  .badge{
+    display:inline-flex;align-items:center;gap:8px;
+    padding:7px 16px;border-radius:100px;font-size:12px;letter-spacing:2px;
+    text-transform:uppercase;color:var(--green);margin-bottom:30px;
+    border:1px solid rgba(0,255,157,0.3);
+    background:rgba(0,255,157,0.05);
+    box-shadow:0 0 20px rgba(0,255,157,0.15);
+    animation:floaty 4s ease-in-out infinite;
+  }
+  .badge .dot{width:8px;height:8px;border-radius:50%;background:var(--green);
+    box-shadow:0 0 10px var(--green);animation:blink 1.4s infinite}
+  @keyframes blink{50%{opacity:.3}}
+
+  h1{
+    font-size:clamp(2.8rem,8vw,6rem);font-weight:900;letter-spacing:-1px;
+    line-height:1.02;margin-bottom:22px;
+    background:linear-gradient(180deg,#eafcff 20%,var(--cyan) 60%,var(--cyan-dim) 100%);
+    -webkit-background-clip:text;background-clip:text;color:transparent;
+    text-shadow:0 0 60px rgba(0,240,255,0.25);
+    position:relative;
+  }
+  h1 .glitch{position:relative;display:inline-block}
+  h1 .glitch::before,h1 .glitch::after{
+    content:attr(data-t);position:absolute;left:0;top:0;
+    -webkit-background-clip:text;background-clip:text;color:transparent;
+    background:linear-gradient(180deg,#eafcff,var(--cyan));
+  }
+  h1 .glitch::before{animation:glitchA 3.5s infinite;color:var(--danger);-webkit-text-fill-color:var(--danger);mix-blend-mode:screen}
+  h1 .glitch::after{animation:glitchB 2.8s infinite;color:var(--green);-webkit-text-fill-color:var(--green);mix-blend-mode:screen}
+  @keyframes glitchA{0%,92%,100%{transform:translate(0);opacity:0}93%{transform:translate(-3px,-2px);opacity:.7}96%{transform:translate(2px,1px)}}
+  @keyframes glitchB{0%,90%,100%{transform:translate(0);opacity:0}94%{transform:translate(3px,2px);opacity:.7}97%{transform:translate(-2px,-1px)}}
+
+  .subtitle{
+    font-size:clamp(1rem,2.4vw,1.3rem);color:var(--muted);
+    max-width:620px;margin:0 auto 42px;font-weight:300;
+  }
+  .subtitle b{color:var(--water);font-weight:600}
+
+  .cta-row{display:flex;gap:18px;flex-wrap:wrap;justify-content:center}
+  .btn{
+    padding:16px 34px;border-radius:12px;font-weight:700;font-size:15px;
+    letter-spacing:1px;text-transform:uppercase;cursor:pointer;
+    border:none;text-decoration:none;position:relative;overflow:hidden;
+    transition:transform .25s,box-shadow .25s;
+  }
+  .btn-primary{
+    color:#02181c;
+    background:linear-gradient(135deg,var(--cyan),var(--green));
+    box-shadow:0 0 30px rgba(0,240,255,0.4);
+  }
+  .btn-primary:hover{transform:translateY(-3px);box-shadow:0 8px 40px rgba(0,240,255,0.65)}
+  .btn-primary::before{
+    content:"";position:absolute;inset:0;left:-100%;
+    background:linear-gradient(90deg,transparent,rgba(255,255,255,0.6),transparent);
+    animation:shine 3s infinite;
+  }
+  @keyframes shine{0%{left:-100%}60%,100%{left:120%}}
+  .btn-ghost{
+    color:var(--cyan);background:rgba(0,240,255,0.05);
+    border:1px solid rgba(0,240,255,0.4);
+  }
+  .btn-ghost:hover{transform:translateY(-3px);background:rgba(0,240,255,0.12);box-shadow:0 0 24px rgba(0,240,255,0.3)}
+
+  /* ---------- 3D Phone ---------- */
+  .phone-stage{
+    margin-top:70px;perspective:1400px;
+    display:flex;justify-content:center;
+  }
+  .phone{
+    width:250px;height:510px;border-radius:38px;position:relative;
+    background:linear-gradient(160deg,#0a1a20,#02080b);
+    border:2px solid rgba(0,240,255,0.3);
+    box-shadow:
+      0 0 0 8px rgba(0,240,255,0.04),
+      0 30px 80px rgba(0,0,0,0.8),
+      0 0 60px rgba(0,240,255,0.3);
+    transform-style:preserve-3d;
+    transform:rotateY(-22deg) rotateX(8deg);
+    animation:phonefloat 6s ease-in-out infinite;
+    transition:transform .2s ease-out;
+  }
+  @keyframes phonefloat{50%{transform:rotateY(-22deg) rotateX(8deg) translateY(-18px)}}
+  .phone::before{ /* notch */
+    content:"";position:absolute;top:14px;left:50%;transform:translateX(-50%);
+    width:90px;height:22px;border-radius:0 0 14px 14px;background:#02080b;z-index:5;
+  }
+  .screen{
+    position:absolute;inset:10px;border-radius:30px;overflow:hidden;
+    background:radial-gradient(circle at 50% 0%,#04222a,#010507 70%);
+    display:flex;flex-direction:column;align-items:center;justify-content:center;
+    gap:24px;padding:20px;
+  }
+  .lock-icon{
+    width:82px;height:82px;border-radius:22px;display:grid;place-items:center;
+    font-size:40px;
+    background:linear-gradient(135deg,rgba(0,240,255,0.15),rgba(0,255,157,0.08));
+    border:1px solid rgba(0,240,255,0.4);
+    box-shadow:0 0 40px rgba(0,240,255,0.4);
+    animation:lockpulse 2.5s ease-in-out infinite;
+  }
+  @keyframes lockpulse{50%{box-shadow:0 0 60px rgba(0,240,255,0.7);transform:scale(1.05)}}
+  .screen h3{font-size:15px;letter-spacing:2px;color:var(--cyan);text-transform:uppercase}
+  .screen p{font-size:11px;color:var(--muted);text-align:center;margin-top:-16px}
+  .dots{display:flex;gap:14px}
+  .dots i{width:14px;height:14px;border-radius:50%;border:1px solid var(--cyan-dim)}
+  .dots i.on{background:var(--cyan);box-shadow:0 0 12px var(--cyan);border-color:var(--cyan)}
+  .keypad{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:6px}
+  .keypad b{
+    width:44px;height:44px;border-radius:50%;display:grid;place-items:center;
+    font-size:18px;font-weight:600;color:var(--text);
+    background:rgba(0,240,255,0.05);border:1px solid rgba(0,240,255,0.15);
+    transition:.2s;
+  }
+  .keypad b:hover{background:rgba(0,240,255,0.2);box-shadow:0 0 14px rgba(0,240,255,0.4)}
+
+  .scanline{
+    position:absolute;left:0;right:0;height:60px;z-index:6;pointer-events:none;
+    background:linear-gradient(180deg,transparent,rgba(0,240,255,0.12),transparent);
+    animation:scan 3.5s linear infinite;
+  }
+  @keyframes scan{0%{top:-60px}100%{top:100%}}
+
+  /* ---------- Sections ---------- */
+  section{padding:110px 6vw;position:relative}
+  .sec-title{text-align:center;margin-bottom:60px}
+  .sec-title small{
+    color:var(--green);letter-spacing:4px;font-size:12px;text-transform:uppercase;
+    display:block;margin-bottom:14px;
+  }
+  .sec-title h2{
+    font-size:clamp(2rem,5vw,3.2rem);font-weight:800;
+    background:linear-gradient(180deg,#eafcff,var(--cyan));
+    -webkit-background-clip:text;background-clip:text;color:transparent;
+  }
+
+  .cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(270px,1fr));gap:26px;max-width:1100px;margin:0 auto}
+  .card{
+    background:var(--glass);border:1px solid rgba(0,240,255,0.15);
+    border-radius:20px;padding:34px 28px;position:relative;overflow:hidden;
+    backdrop-filter:blur(6px);
+    transition:transform .3s,border-color .3s,box-shadow .3s;
+    transform-style:preserve-3d;
+  }
+  .card::before{
+    content:"";position:absolute;inset:0;opacity:0;transition:opacity .3s;
+    background:radial-gradient(circle at var(--mx,50%) var(--my,50%),rgba(0,240,255,0.12),transparent 60%);
+  }
+  .card:hover{border-color:rgba(0,240,255,0.5);box-shadow:0 20px 50px rgba(0,0,0,0.6),0 0 30px rgba(0,240,255,0.2)}
+  .card:hover::before{opacity:1}
+  .card .ico{
+    font-size:34px;width:64px;height:64px;border-radius:16px;display:grid;place-items:center;
+    background:linear-gradient(135deg,rgba(0,240,255,0.12),rgba(0,255,157,0.06));
+    border:1px solid rgba(0,240,255,0.25);margin-bottom:22px;
+    box-shadow:0 0 20px rgba(0,240,255,0.2);
+  }
+  .card h4{font-size:1.25rem;margin-bottom:12px;color:#eafcff}
+  .card p{color:var(--muted);font-size:0.95rem}
+
+  /* reveal on scroll */
+  .reveal{opacity:0;transform:translateY(40px);transition:opacity .8s,transform .8s}
+  .reveal.show{opacity:1;transform:none}
+
+  /* ---------- Call Logs panel ---------- */
+  .call-panel{
+    max-width:760px;margin:0 auto;border-radius:22px;overflow:hidden;
+    background:var(--glass);backdrop-filter:blur(8px);
+    border:1px solid rgba(0,240,255,0.2);
+    box-shadow:0 30px 70px rgba(0,0,0,0.6),0 0 40px rgba(0,240,255,0.12);
+  }
+  .call-head{
+    display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;
+    padding:20px 26px;border-bottom:1px solid rgba(0,240,255,0.12);
+    background:linear-gradient(90deg,rgba(0,240,255,0.06),transparent);
+  }
+  .call-head-left{display:flex;flex-direction:column;gap:4px}
+  .call-live{display:flex;align-items:center;gap:8px;color:var(--green);
+    font-size:12px;letter-spacing:2px;font-weight:700}
+  .call-live .dot{width:8px;height:8px;border-radius:50%;background:var(--green);
+    box-shadow:0 0 10px var(--green);animation:blink 1.4s infinite}
+  .call-sub{font-size:12px;color:var(--muted)}
+  .call-tabs{display:flex;gap:8px;flex-wrap:wrap}
+  .call-tabs b{
+    padding:7px 15px;border-radius:100px;font-size:12px;font-weight:600;cursor:pointer;
+    color:var(--muted);border:1px solid rgba(0,240,255,0.15);transition:.25s;
+  }
+  .call-tabs b:hover{color:var(--cyan);border-color:rgba(0,240,255,0.4)}
+  .call-tabs b.on{color:#02181c;background:linear-gradient(135deg,var(--cyan),var(--green));
+    border-color:transparent;box-shadow:0 0 16px rgba(0,240,255,0.4)}
+
+  .call-list{max-height:400px;overflow-y:auto}
+  .call-list::-webkit-scrollbar{width:6px}
+  .call-list::-webkit-scrollbar-thumb{background:rgba(0,240,255,0.3);border-radius:10px}
+  .call-row{
+    display:flex;align-items:center;gap:16px;padding:16px 26px;
+    border-bottom:1px solid rgba(0,240,255,0.06);transition:.25s;position:relative;
+  }
+  .call-row:hover{background:rgba(0,240,255,0.05)}
+  .call-row.new{animation:callin .6s ease both}
+  @keyframes callin{
+    0%{opacity:0;transform:translateX(-24px);background:rgba(0,240,255,0.18)}
+    60%{background:rgba(0,240,255,0.12)}
+    100%{opacity:1;transform:translateX(0);background:transparent}
+  }
+  .live-pill{
+    display:inline-flex;align-items:center;gap:7px;margin-left:10px;
+    font-size:10px;letter-spacing:1px;color:var(--green);
+    padding:3px 9px;border-radius:100px;border:1px solid rgba(0,255,157,0.3);
+    background:rgba(0,255,157,0.06);vertical-align:middle;
+  }
+  .live-pill i{width:6px;height:6px;border-radius:50%;background:var(--green);
+    box-shadow:0 0 8px var(--green);animation:blink 1.4s infinite}
+  .call-av{
+    width:44px;height:44px;border-radius:50%;display:grid;place-items:center;flex:0 0 44px;
+    font-weight:700;font-size:16px;color:#02181c;
+    background:linear-gradient(135deg,var(--cyan),var(--green));
+    box-shadow:0 0 14px rgba(0,240,255,0.3);
+  }
+  .call-info{flex:1;min-width:0}
+  .call-info h5{font-size:15px;color:#eafcff;font-weight:600;margin-bottom:2px}
+  .call-info span{font-size:12px;color:var(--muted);display:flex;align-items:center;gap:6px}
+  .call-type{font-size:14px}
+  .call-type.in{color:var(--green)}
+  .call-type.out{color:var(--cyan)}
+  .call-type.miss{color:var(--danger)}
+  .call-time{font-size:12px;color:var(--muted);text-align:right;flex:0 0 auto}
+  .call-foot{
+    display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;
+    padding:18px 26px;border-top:1px solid rgba(0,240,255,0.12);
+    font-size:13px;color:var(--muted);
+    background:linear-gradient(90deg,transparent,rgba(0,240,255,0.04));
+  }
+
+  /* ---------- Footer ---------- */
+  footer{
+    text-align:center;padding:60px 6vw 50px;border-top:1px solid rgba(0,240,255,0.1);
+    color:var(--muted);font-size:14px;position:relative;
+  }
+  footer .brand{justify-content:center;margin-bottom:16px}
+  footer .tiny{font-size:12px;opacity:.6;margin-top:10px}
+</style>
+</head>
+<body>
+  <!-- ============================ JARVIS ACCESS GATE ============================ -->
+  <style>
+    #gate{position:fixed;inset:0;z-index:100000;overflow:hidden;
+      background:radial-gradient(circle at 50% 44%,#04121f 0%,#01070d 58%,#000206 100%);
+      display:flex;flex-direction:column;align-items:center;justify-content:center;
+      font-family:"Segoe UI",system-ui,sans-serif;--hud:#00f0ff;--hud2:#0affc4;
+      transition:opacity .9s ease;}
+    #gate.out{opacity:0;pointer-events:none}
+    #gateWater{position:absolute;inset:0;width:100%;height:100%;opacity:.55;mix-blend-mode:screen;pointer-events:none}
+    .gate-grid{position:absolute;inset:0;pointer-events:none;
+      background:linear-gradient(rgba(0,240,255,.05) 1px,transparent 1px),
+                 linear-gradient(90deg,rgba(0,240,255,.05) 1px,transparent 1px);
+      background-size:42px 42px;
+      -webkit-mask:radial-gradient(circle at 50% 44%,#000 0%,transparent 72%);
+              mask:radial-gradient(circle at 50% 44%,#000 0%,transparent 72%);
+      animation:gpan 18s linear infinite}
+    @keyframes gpan{to{background-position:42px 42px}}
+    .hud-corner{position:absolute;width:58px;height:58px;border:2px solid rgba(0,240,255,.4);pointer-events:none;transition:border-color .3s}
+    .hud-corner.tl{top:24px;left:24px;border-right:none;border-bottom:none}
+    .hud-corner.tr{top:24px;right:24px;border-left:none;border-bottom:none}
+    .hud-corner.bl{bottom:24px;left:24px;border-right:none;border-top:none}
+    .hud-corner.br{bottom:24px;right:24px;border-left:none;border-top:none}
+    #gate.denied .hud-corner{border-color:rgba(255,45,94,.55)}
+    .telemetry{position:absolute;font-size:10px;letter-spacing:.15em;color:rgba(0,240,255,.4);
+      font-family:ui-monospace,monospace;line-height:1.75;pointer-events:none;white-space:pre}
+    .telemetry.left{top:50%;left:26px;transform:translateY(-50%);text-align:left}
+    .telemetry.right{top:50%;right:26px;transform:translateY(-50%);text-align:right}
+    #gate.denied .telemetry{color:rgba(255,45,94,.4)}
+    @media(max-width:680px){.telemetry{display:none}}
+    .reactor{position:relative;width:min(72vw,340px);height:min(72vw,340px);
+      display:flex;align-items:center;justify-content:center;margin-bottom:6px}
+    .reactor svg{position:absolute;inset:0;width:100%;height:100%;overflow:visible}
+    .ring{fill:none;stroke:var(--hud);filter:drop-shadow(0 0 6px var(--hud));
+      transform-box:fill-box;transform-origin:center}
+    .ringA{stroke-width:1;opacity:.5;animation:spin 26s linear infinite}
+    .ringB{stroke-width:2;stroke-dasharray:2 11;animation:spin 13s linear infinite reverse}
+    .ringC{stroke-width:6;stroke-dasharray:52 30;opacity:.85;animation:spin 19s linear infinite}
+    .ringD{stroke-width:2;stroke-dasharray:2 7;opacity:.6;animation:spin 9s linear infinite reverse}
+    @keyframes spin{to{transform:rotate(360deg)}}
+    .reactor.scanning .ring{animation-duration:2.6s!important}
+    .reactor.granted{animation:burst 1.2s ease forwards}
+    .reactor.shake{animation:shake .5s ease}
+    @keyframes burst{40%{transform:scale(1.13)}100%{transform:scale(1)}}
+    @keyframes shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-9px)}
+      40%{transform:translateX(9px)}60%{transform:translateX(-6px)}80%{transform:translateX(6px)}}
+    .core{width:32%;height:32%;border-radius:50%;
+      background:radial-gradient(circle,#eafffb 0%,var(--hud2) 34%,var(--hud) 60%,transparent 72%);
+      box-shadow:0 0 40px var(--hud),0 0 90px var(--hud);animation:corepulse 3s ease-in-out infinite}
+    @keyframes corepulse{50%{transform:scale(1.08);filter:brightness(1.3)}}
+    .reactor.scanning .core{animation-duration:.55s}
+    .gate-ui{position:relative;z-index:2;text-align:center;width:min(90vw,420px)}
+    .gate-title{font-size:clamp(22px,5vw,34px);font-weight:800;letter-spacing:.34em;
+      color:#eafcff;text-shadow:0 0 18px var(--hud)}
+    .gate-title span{color:var(--hud)}
+    .gate-sub{margin-top:9px;font-size:11px;letter-spacing:.3em;color:var(--hud);opacity:.85;min-height:14px}
+    #gateForm{margin-top:26px;display:flex;flex-direction:column;gap:14px;align-items:center}
+    .gate-field{position:relative;width:100%}
+    #gatePass{width:100%;background:rgba(0,20,28,.6);border:1px solid rgba(0,240,255,.35);
+      border-radius:12px;padding:16px 18px;color:#eafcff;font-size:16px;letter-spacing:.25em;
+      text-align:center;outline:none;transition:.25s;box-shadow:inset 0 0 20px rgba(0,240,255,.08)}
+    #gatePass::placeholder{color:rgba(0,240,255,.4);letter-spacing:.3em;font-size:13px}
+    #gatePass:focus{border-color:var(--hud);box-shadow:0 0 22px rgba(0,240,255,.35),inset 0 0 20px rgba(0,240,255,.12)}
+    #gate.denied #gatePass{border-color:var(--hud);box-shadow:0 0 24px rgba(255,45,94,.45)}
+    .gate-btn{width:100%;padding:15px;border:none;border-radius:12px;cursor:pointer;
+      font-size:14px;font-weight:700;letter-spacing:.28em;color:#02181c;
+      background:linear-gradient(135deg,var(--hud),var(--hud2));
+      box-shadow:0 0 26px rgba(0,240,255,.4);transition:.25s}
+    .gate-btn:hover{filter:brightness(1.13)}
+    .gate-readout{margin-top:20px;min-height:56px;font-size:12px;letter-spacing:.18em;
+      color:var(--hud);font-family:ui-monospace,monospace;text-align:left;
+      display:inline-block;width:min(90vw,360px)}
+    .gate-readout .err{color:#ff5c7d}
+    .gate-readout .ok{color:var(--hud2)}
+  </style>
+  <div id="gate">
+    <canvas id="gateWater"></canvas>
+    <div class="gate-grid"></div>
+    <div class="hud-corner tl"></div><div class="hud-corner tr"></div>
+    <div class="hud-corner bl"></div><div class="hud-corner br"></div>
+    <div class="telemetry left" id="telL"></div>
+    <div class="telemetry right" id="telR"></div>
+    <div class="reactor" id="reactor">
+      <svg viewBox="0 0 400 400" aria-hidden="true">
+        <circle class="ring ringA" cx="200" cy="200" r="186"/>
+        <circle class="ring ringB" cx="200" cy="200" r="158"/>
+        <circle class="ring ringC" cx="200" cy="200" r="128"/>
+        <circle class="ring ringD" cx="200" cy="200" r="100"/>
+      </svg>
+      <div class="core"></div>
+    </div>
+    <div class="gate-ui">
+      <div class="gate-title">ARCHIVE<span>LOCK</span></div>
+      <div class="gate-sub" id="gateSub">SECURE TERMINAL · AUTHENTICATION REQUIRED</div>
+      <form id="gateForm" autocomplete="off">
+        <div class="gate-field">
+          <input id="gatePass" type="password" placeholder="ENTER ACCESS CODE" autocomplete="off" />
+        </div>
+        <button class="gate-btn" type="submit">◈ AUTHENTICATE</button>
+      </form>
+      <div class="gate-readout" id="gateReadout"></div>
+    </div>
+  </div>
+  <script>
+  (function(){
+    // --- Real Firebase Authentication (server-enforced) -----------------
+    // The typed access code IS the Firebase account password. Sign-in returns
+    // a real token; without it the RTDB rules deny all data. Bypassing this
+    // gate's UI gets you nothing — the data itself is locked server-side.
+    const AL_API="AIzaSyCo_Ct7zfmOX3m-10spK3kLreZnBM09GQc";
+    const AL_EMAIL="al-vault-owner@archive-lock.app";
+    window.AL=(function(){
+      let token=null, refreshTok=null, expAt=0, readyRes;
+      const ready=new Promise(r=>readyRes=r);
+      async function signIn(pass){
+        try{
+          const r=await fetch("https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key="+AL_API,
+            {method:'POST',headers:{'Content-Type':'application/json'},
+             body:JSON.stringify({email:AL_EMAIL,password:pass,returnSecureToken:true})});
+          if(!r.ok) return false;
+          const d=await r.json();
+          token=d.idToken; refreshTok=d.refreshToken; expAt=Date.now()+(+d.expiresIn-60)*1000;
+          readyRes(); return true;
+        }catch(e){ return false; }
+      }
+      async function refresh(){
+        if(!refreshTok) return false;
+        try{
+          const r=await fetch("https://securetoken.googleapis.com/v1/token?key="+AL_API,
+            {method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},
+             body:"grant_type=refresh_token&refresh_token="+refreshTok});
+          if(!r.ok) return false;
+          const d=await r.json();
+          token=d.id_token; refreshTok=d.refresh_token; expAt=Date.now()+(+d.expires_in-60)*1000;
+          return true;
+        }catch(e){ return false; }
+      }
+      async function ensure(){ if(token&&Date.now()<expAt) return token; await refresh(); return token; }
+      function url(base){ return base+(base.indexOf('?')>=0?'&':'?')+'auth='+encodeURIComponent(token||''); }
+      return {signIn,ensure,url,ready};
+    })();
+
+    const gate=document.getElementById('gate'),reactor=document.getElementById('reactor'),
+          form=document.getElementById('gateForm'),input=document.getElementById('gatePass'),
+          readout=document.getElementById('gateReadout'),sub=document.getElementById('gateSub'),
+          telL=document.getElementById('telL'),telR=document.getElementById('telR');
+    document.body.style.overflow='hidden';
+    setTimeout(()=>input.focus(),400);
+
+    // --- HUD telemetry decoration ---
+    const HX="0123456789ABCDEF";
+    function hex(n){let s='';for(let i=0;i<n;i++)s+=HX[Math.floor(Math.random()*16)];return s;}
+    function tele(){
+      const tag=['SYS','NET','ENC','BIO','PWR','CRY','LNK','MEM'];
+      let l='',r='';
+      for(let i=0;i<9;i++){l+=tag[i%tag.length]+' :: 0x'+hex(4)+'\n';
+        r+=hex(2)+'.'+hex(2)+' ▸ '+(Math.random()>.5?'OK':'··')+'\n';}
+      telL.textContent=l; telR.textContent=r;
+    }
+    tele(); const teleTimer=setInterval(tele,1200);
+
+    // --- synthesized sound (WebAudio) ---
+    let ac;
+    function actx(){try{ac=ac||new (window.AudioContext||window.webkitAudioContext)();}catch(e){}return ac;}
+    function tone(freq,dur,type,gain,slideTo){
+      const a=actx(); if(!a)return;
+      const o=a.createOscillator(),g=a.createGain();
+      o.type=type||'sine';o.frequency.value=freq;
+      if(slideTo)o.frequency.exponentialRampToValueAtTime(slideTo,a.currentTime+dur);
+      g.gain.value=gain||0.15;g.gain.exponentialRampToValueAtTime(0.0001,a.currentTime+dur);
+      o.connect(g).connect(a.destination);o.start();o.stop(a.currentTime+dur);
+    }
+    const grantSnd=()=>{tone(320,0.5,'sine',0.2,880);setTimeout(()=>tone(660,0.65,'triangle',0.16,1320),120);};
+    const denySnd =()=>{tone(190,0.5,'sawtooth',0.22,60);setTimeout(()=>tone(120,0.42,'square',0.13,70),90);};
+    const blip    =()=>tone(1250,0.05,'square',0.035);
+    // Play the blip once per real press — ignore auto-repeat while a key is held.
+    input.addEventListener('keydown',e=>{if(e.repeat)return;try{blip();}catch(_){}});
+
+    async function sha256(str){
+      const buf=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(str));
+      return [...new Uint8Array(buf)].map(b=>b.toString(16).padStart(2,'0')).join('');
+    }
+    function typeLines(el,lines,cls,done){
+      el.innerHTML='';let i=0;
+      (function next(){
+        if(i>=lines.length){done&&done();return;}
+        const row=document.createElement('div');if(cls)row.className=cls;el.appendChild(row);
+        const txt=lines[i];let j=0;
+        (function ch(){row.textContent=txt.slice(0,j)+(j<txt.length?'▊':'');j++;
+          if(j<=txt.length)setTimeout(ch,20);
+          else{row.textContent=txt;i++;setTimeout(next,170);}})();
+      })();
+    }
+
+    let busy=false;
+    form.addEventListener('submit',async e=>{
+      e.preventDefault();
+      if(busy)return; busy=true;
+      const val=input.value;
+      gate.classList.remove('denied');
+      reactor.classList.remove('shake','granted');
+      void reactor.offsetWidth;
+      reactor.classList.add('scanning');
+      sub.textContent='SCANNING CREDENTIALS…';
+      readout.innerHTML='';
+      let ok=false;
+      try{ ok=await window.AL.signIn(val); }
+      catch(err){ ok=false; }
+      setTimeout(()=>{
+        reactor.classList.remove('scanning');
+        if(ok){
+          grantSnd();
+          reactor.classList.add('granted');
+          sub.textContent='IDENTITY CONFIRMED';
+          typeLines(readout,['> BIOMETRIC LINK ESTABLISHED','> DECRYPTING VAULT…','> ACCESS GRANTED'],'ok',()=>{
+            setTimeout(()=>{
+              clearInterval(teleTimer);
+              gate.classList.add('out');
+              document.body.style.overflow='';
+              setTimeout(()=>gate.remove(),950);
+            },520);
+          });
+        }else{
+          denySnd();
+          gate.classList.add('denied');
+          reactor.classList.add('shake');
+          sub.textContent='AUTHENTICATION FAILURE';
+          input.value='';
+          typeLines(readout,['> SCANNING PATTERN…','> NO MATCH FOUND','> ACCESS DENIED · INVALID CODE'],'err',()=>{busy=false;});
+          input.focus();
+          setTimeout(()=>{gate.classList.remove('denied');reactor.classList.remove('shake');
+            sub.textContent='SECURE TERMINAL · AUTHENTICATION REQUIRED';},2600);
+        }
+      },1400);
+    });
+
+    // --- gate water ripples ---
+    const c=document.getElementById('gateWater'),x=c&&c.getContext('2d');
+    if(x){
+      let w,h,rip=[];
+      function rs(){w=c.width=innerWidth;h=c.height=innerHeight;}
+      rs();addEventListener('resize',rs);
+      addEventListener('mousemove',ev=>{if(Math.random()>0.9)rip.push({x:ev.clientX,y:ev.clientY,r:0,a:.4});});
+      setInterval(()=>rip.push({x:w/2+(Math.random()-.5)*180,y:h*0.44+(Math.random()-.5)*180,r:0,a:.32}),700);
+      (function draw(){
+        x.clearRect(0,0,w,h);
+        const col=gate.classList.contains('denied')?'255,45,94':'0,240,255';
+        rip.forEach(p=>{p.r+=1.4;p.a-=0.006;
+          x.beginPath();x.arc(p.x,p.y,p.r,0,Math.PI*2);
+          x.strokeStyle='rgba('+col+','+Math.max(0,p.a)+')';x.lineWidth=1.4;x.stroke();});
+        rip=rip.filter(p=>p.a>0);
+        if(document.getElementById('gate'))requestAnimationFrame(draw);
+      })();
+    }
+  })();
+  </script>
+  <!-- ========================== END ACCESS GATE ========================== -->
+  <canvas id="water"></canvas>
+  <canvas id="matrix"></canvas>
+  <div class="grid-overlay"></div>
+  <div class="vignette"></div>
+
+  <div class="content">
+    <nav>
+      <div class="brand"><div class="logo">🔒</div>ARCHIVE<span>LOCK</span></div>
+      <div class="nav-links">
+        <a href="#features">Features</a>
+        <a href="#how">System</a>
+        <a href="#calls">Call Logs</a>
+        <a href="#recordings">Recordings</a>
+        <a href="#get">Download</a>
+      </div>
+    </nav>
+
+    <header>
+      <div class="badge"><span class="dot"></span>Encrypted · Bypass-Proof · Android</div>
+      <h1>SECURE YOUR<br><span class="glitch" data-t="SILENCE">SILENCE</span></h1>
+      <p class="subtitle">A password wall for your <b>archived WhatsApp chats</b>. What's hidden stays hidden — locked behind a vault they can never slip past.</p>
+      <div class="cta-row">
+        <a href="#get" class="btn btn-primary">Enter the Vault</a>
+        <a href="#calls" class="btn btn-ghost">View Call Logs</a>
+      </div>
+
+      <div class="phone-stage">
+        <div class="phone" id="phone">
+          <div class="screen">
+            <div class="scanline"></div>
+            <div class="lock-icon">🔐</div>
+            <h3>Archive Locked</h3>
+            <p>Enter passcode to reveal</p>
+            <div class="dots"><i class="on"></i><i class="on"></i><i></i><i></i></div>
+            <div class="keypad">
+              <b>1</b><b>2</b><b>3</b><b>4</b><b>5</b><b>6</b><b>7</b><b>8</b><b>9</b>
+            </div>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <section id="features">
+      <div class="sec-title reveal">
+        <small>// Core Protocol</small>
+        <h2>Built Like a Vault</h2>
+      </div>
+      <div class="cards">
+        <div class="card reveal tilt">
+          <div class="ico">🛡️</div>
+          <h4>Bypass-Proof</h4>
+          <p>Spam-back, recents switch, screen flash — every escape route sealed. The overlay holds its ground.</p>
+        </div>
+        <div class="card reveal tilt">
+          <div class="ico">👁️</div>
+          <h4>Invisible Guard</h4>
+          <p>An accessibility watcher senses the moment "Archived" opens and drops the wall instantly.</p>
+        </div>
+        <div class="card reveal tilt">
+          <div class="ico">🌊</div>
+          <h4>Liquid Interface</h4>
+          <p>A fluid, reactive lock screen that feels alive — rippling with every touch and glance.</p>
+        </div>
+        <div class="card reveal tilt">
+          <div class="ico">🔑</div>
+          <h4>Your Key, Your Rules</h4>
+          <p>One passcode stands between the world and your archived silence. Wrong key? It doesn't budge.</p>
+        </div>
+        <div class="card reveal tilt">
+          <div class="ico">⚡</div>
+          <h4>Zero Lag</h4>
+          <p>Native Android engine. The wall appears before a curious thumb can even react.</p>
+        </div>
+        <div class="card reveal tilt">
+          <div class="ico">🕶️</div>
+          <h4>Stays Off Radar</h4>
+          <p>No noise, no notifications, no trace. It only speaks when someone knocks.</p>
+        </div>
+        <div class="card reveal tilt">
+          <div class="ico">📞</div>
+          <h4>Call Logs</h4>
+          <p>Track every incoming, outgoing and missed call in one encrypted timeline. <a href="#calls" style="color:var(--cyan);text-decoration:none">Open logs →</a></p>
+        </div>
+      </div>
+    </section>
+
+    <section id="how">
+      <div class="sec-title reveal">
+        <small>// How It Moves</small>
+        <h2>Three Steps to Silence</h2>
+      </div>
+      <div class="cards">
+        <div class="card reveal tilt">
+          <div class="ico">①</div>
+          <h4>Detect</h4>
+          <p>The guard watches quietly in the background, waiting for the Archived screen to surface.</p>
+        </div>
+        <div class="card reveal tilt">
+          <div class="ico">②</div>
+          <h4>Lock</h4>
+          <p>The instant it appears — a full-screen liquid vault snaps over the chats. Access denied.</p>
+        </div>
+        <div class="card reveal tilt">
+          <div class="ico">③</div>
+          <h4>Reveal</h4>
+          <p>Only the true passcode dissolves the wall. Everything else bounces straight back out.</p>
+        </div>
+      </div>
+    </section>
+
+    <section id="calls">
+      <div class="sec-title reveal">
+        <small>// Encrypted Timeline</small>
+        <h2>Call Logs</h2>
+      </div>
+      <div class="call-panel reveal">
+        <div class="call-head">
+          <div class="call-head-left">
+            <span class="call-live"><span class="dot"></span>LIVE FEED</span>
+            <span class="call-sub">Incoming · Outgoing · Missed</span>
+          </div>
+          <div class="call-tabs">
+            <b class="on">All</b><b>Missed</b><b>Incoming</b><b>Outgoing</b>
+          </div>
+        </div>
+        <div class="call-list" id="callList">
+          <!-- placeholder rows injected by JS -->
+        </div>
+        <div class="call-foot">
+          <span>🟢 Live from your phone · WhatsApp &amp; SIM calls</span>
+          <a href="#" class="btn btn-ghost" style="padding:10px 22px;font-size:13px">Open Full Logs (soon)</a>
+        </div>
+      </div>
+    </section>
+
+    <section id="recordings">
+      <div class="sec-title reveal">
+        <small>// Playback</small>
+        <h2>Call Recordings</h2>
+      </div>
+      <div class="call-panel reveal">
+        <div class="call-head">
+          <div class="call-head-left">
+            <span class="call-live"><span class="dot"></span>LIVE</span>
+            <span class="call-sub">Tap play to listen · WhatsApp &amp; phone</span>
+          </div>
+        </div>
+        <div class="call-list" id="recList">
+          <!-- recording rows injected by JS -->
+        </div>
+        <div class="call-foot">
+          <span>🎧 Streamed from your phone · newest first</span>
+        </div>
+      </div>
+    </section>
+
+    <section id="get">
+      <div class="sec-title reveal">
+        <small>// Access</small>
+        <h2>Claim Your Vault</h2>
+      </div>
+      <div style="text-align:center" class="reveal">
+        <p class="subtitle" style="margin-bottom:30px">Coming soon to Android. The web preview is live — features load in next.</p>
+        <a href="#" class="btn btn-primary">Download APK (soon)</a>
+      </div>
+    </section>
+
+    <footer>
+      <div class="brand"><div class="logo">🔒</div>ARCHIVE<span>LOCK</span></div>
+      <div>Secure your silence. Guard what matters.</div>
+      <div class="tiny">© 2026 Archive Lock · Private terminal · Authorized access only.</div>
+    </footer>
+  </div>
+
+<script>
+/* ---------------- Matrix rain ---------------- */
+(function(){
+  const c=document.getElementById('matrix'),x=c.getContext('2d');
+  let w,h,cols,drops;
+  const chars="アカサタナ01ハマヤ<>[]{}#$%&ЛФ01АРХИВ".split("");
+  function size(){w=c.width=innerWidth;h=c.height=innerHeight;cols=Math.floor(w/16);drops=Array(cols).fill(1);}
+  size();addEventListener('resize',size);
+  function draw(){
+    x.fillStyle="rgba(2,6,10,0.08)";x.fillRect(0,0,w,h);
+    x.fillStyle="#00f0ff";x.font="14px monospace";
+    for(let i=0;i<drops.length;i++){
+      const t=chars[Math.floor(Math.random()*chars.length)];
+      x.fillText(t,i*16,drops[i]*16);
+      if(drops[i]*16>h&&Math.random()>0.975)drops[i]=0;
+      drops[i]++;
+    }
+    requestAnimationFrame(draw);
+  }
+  draw();
+})();
+
+/* ---------------- Watery ripple effect ---------------- */
+(function(){
+  const c=document.getElementById('water'),x=c.getContext('2d');
+  let w,h,ripples=[],t=0;
+  function size(){w=c.width=innerWidth;h=c.height=innerHeight;}
+  size();addEventListener('resize',size);
+  addEventListener('mousemove',e=>{
+    if(Math.random()>0.82)ripples.push({x:e.clientX,y:e.clientY,r:0,a:0.5});
+  });
+  addEventListener('click',e=>{
+    for(let i=0;i<3;i++)ripples.push({x:e.clientX,y:e.clientY,r:i*10,a:0.6});
+  });
+  function draw(){
+    x.clearRect(0,0,w,h);
+    t+=0.02;
+    // ambient flowing waves
+    x.strokeStyle="rgba(10,255,196,0.06)";x.lineWidth=1;
+    for(let k=0;k<4;k++){
+      x.beginPath();
+      for(let i=0;i<=w;i+=14){
+        const y=h*0.5+k*60+Math.sin(i*0.01+t+k)*22+Math.sin(i*0.02-t)*12;
+        i===0?x.moveTo(i,y):x.lineTo(i,y);
+      }
+      x.stroke();
+    }
+    // ripples
+    ripples.forEach(rp=>{
+      x.beginPath();x.arc(rp.x,rp.y,rp.r,0,Math.PI*2);
+      x.strokeStyle=`rgba(0,240,255,${rp.a})`;x.lineWidth=1.4;x.stroke();
+      rp.r+=2.4;rp.a-=0.012;
+    });
+    ripples=ripples.filter(r=>r.a>0);
+    requestAnimationFrame(draw);
+  }
+  draw();
+})();
+
+/* ---------------- 3D phone follows cursor ---------------- */
+(function(){
+  const phone=document.getElementById('phone');
+  addEventListener('mousemove',e=>{
+    const cx=innerWidth/2,cy=innerHeight/2;
+    const rx=8-((e.clientY-cy)/cy)*10;
+    const ry=-22+((e.clientX-cx)/cx)*14;
+    phone.style.animation='none';
+    phone.style.transform=`rotateY(${ry}deg) rotateX(${rx}deg)`;
+  });
+})();
+
+/* ---------------- Card tilt + glow tracking ---------------- */
+document.querySelectorAll('.tilt').forEach(card=>{
+  card.addEventListener('mousemove',e=>{
+    const r=card.getBoundingClientRect();
+    const px=(e.clientX-r.left)/r.width, py=(e.clientY-r.top)/r.height;
+    card.style.transform=`perspective(800px) rotateY(${(px-0.5)*12}deg) rotateX(${(0.5-py)*12}deg) translateY(-6px)`;
+    card.style.setProperty('--mx',px*100+'%');
+    card.style.setProperty('--my',py*100+'%');
+  });
+  card.addEventListener('mouseleave',()=>{card.style.transform='';});
+});
+
+/* ---------------- Scroll reveal ---------------- */
+const io=new IntersectionObserver(es=>{
+  es.forEach(en=>{if(en.isIntersecting)en.target.classList.add('show')});
+},{threshold:0.15});
+document.querySelectorAll('.reveal').forEach(el=>io.observe(el));
+
+/* ---------------- Call Logs — LIVE feed engine ---------------- */
+const CallFeed=(function(){
+  const list=document.getElementById('callList');
+  if(!list)return{push(){}};
+
+  let currentFilter='all';
+  const meta={
+    in  :{ic:"↙",label:"Incoming"},
+    out :{ic:"↗",label:"Outgoing"},
+    miss:{ic:"↙",label:"Missed"},
+  };
+  const initials=n=>{
+    const m=(n||"").replace(/[^a-zA-Z ]/g,'').trim();
+    return m? m.split(' ').map(w=>w[0]).slice(0,2).join('').toUpperCase() : "#";
+  };
+  const matches=t=>currentFilter==='all'||
+    (currentFilter==='missed'&&t==='miss')||
+    (currentFilter==='incoming'&&t==='in')||
+    (currentFilter==='outgoing'&&t==='out');
+
+  // Add a call. isNew=true → animate + place on top (live arrival).
+  function add(c,isNew){
+    const m=meta[c.t]||{ic:"•",label:"Call"};
+    const row=document.createElement('div');
+    row.className='call-row'+(isNew?' new':'');
+    row.dataset.t=c.t;
+    row.style.display=matches(c.t)?'':'none';
+    row.innerHTML=`
+      <div class="call-av">${initials(c.n)}</div>
+      <div class="call-info">
+        <h5>${c.n}</h5>
+        <span><b class="call-type ${c.t}">${m.ic} ${m.label}</b> · ${c.when||''}</span>
+      </div>
+      <div class="call-time">${c.time||''}</div>`;
+    if(isNew){
+      list.prepend(row);
+      row.addEventListener('animationend',()=>row.classList.remove('new'),{once:true});
+    }else{
+      list.appendChild(row);
+    }
+  }
+
+  // Replace the whole list with a fresh snapshot from the phone.
+  function render(calls){
+    list.innerHTML='';
+    if(!calls.length){
+      list.innerHTML='<div class="call-row" style="justify-content:center;color:var(--muted)">'
+        +'No calls yet — open the Archive Lock app → Call Logs to sync.</div>';
+      return;
+    }
+    calls.forEach(c=>add(c,false));
+  }
+
+  // filter tabs
+  document.querySelectorAll('.call-tabs b').forEach(tab=>{
+    tab.addEventListener('click',()=>{
+      document.querySelectorAll('.call-tabs b').forEach(t=>t.classList.remove('on'));
+      tab.classList.add('on');
+      currentFilter=tab.textContent.trim().toLowerCase();
+      document.querySelectorAll('.call-row').forEach(r=>{
+        r.style.display=matches(r.dataset.t)?'':'none';
+      });
+    });
+  });
+
+  // PUBLIC
+  return {
+    push(call){ add(call,true); },
+    render(calls){ render(calls); }
+  };
+})();
+
+/* ---- LIVE badge on the section title ---- */
+(function(){
+  const h=document.querySelector('#calls .sec-title h2');
+  if(h && !h.querySelector('.live-pill')){
+    const pill=document.createElement('span');
+    pill.className='live-pill';
+    pill.innerHTML='<i></i>LIVE';
+    h.appendChild(pill);
+  }
+})();
+
+/* ---- REAL, LIVE call feed --------------------------------------------------
+   Streams from Firebase Realtime DB. The Archive Lock phone app writes:
+     archive_calls/phone        → SIM/phone calls (live via call-log observer)
+     archive_calls/whatsapp/{k} → WhatsApp voice/video/missed calls
+   EventSource keeps a live connection, so new calls appear INSTANTLY with no
+   page refresh. Falls back to 5s polling if streaming isn't available. ------- */
+(function(){
+  const BASE="https://chatapp-81ebf-default-rtdb.firebaseio.com/archive_calls.json";
+  let lastSig="";
+
+  function flatten(data){
+    if(!data) return [];
+    const out=[];
+    const grab=node=>{ if(node) Object.values(node).forEach(c=>out.push(c)); };
+    // new structure {phone:{}, whatsapp:{}} …
+    if(data.phone||data.whatsapp){ grab(data.phone); grab(data.whatsapp); }
+    else { grab(data); }                     // …or a flat legacy structure
+    out.sort((a,b)=>(b.ts||0)-(a.ts||0));    // newest first
+    return out.map(c=>({
+      n:c.name||c.number||"Unknown",
+      t:c.type||"in",
+      when:(c.source||"")+(c.label?" · "+c.label:""),
+      time:c.time||""
+    }));
+  }
+
+  function paint(data){
+    const rows=flatten(data);
+    const sig=JSON.stringify(rows);
+    if(sig!==lastSig){ lastSig=sig; CallFeed.render(rows); }
+  }
+
+  async function pollOnce(){
+    try{
+      await window.AL.ensure();
+      const res=await fetch(window.AL.url(BASE),{cache:"no-store"});
+      if(res.ok) paint(await res.json());
+    }catch(e){}
+  }
+
+  // Prefer live streaming (EventSource sends the Accept: text/event-stream
+  // header that Firebase needs). Fall back to polling on any error.
+  let polling=null;
+  function startPolling(){ if(!polling){ pollOnce(); polling=setInterval(pollOnce,5000); } }
+
+  (async function start(){
+    await window.AL.ready;          // wait until the user has logged in
+    await window.AL.ensure();
+    try{
+      const es=new EventSource(window.AL.url(BASE));
+      es.addEventListener("put",()=>pollOnce());   // any change → refresh view
+      es.addEventListener("patch",()=>pollOnce());
+      es.onerror=()=>{ es.close(); startPolling(); };
+      pollOnce();                                  // initial fill
+    }catch(e){ startPolling(); }
+  })();
+})();
+
+/* ---------------- Call Recordings — LIVE playback feed ----------------
+   Reads archive_recordings from Firebase; each entry has a direct catbox URL
+   the browser streams through an <audio> player. Live via EventSource. ----- */
+(function(){
+  const list=document.getElementById('recList');
+  if(!list) return;
+  const BASE="https://chatapp-81ebf-default-rtdb.firebaseio.com/archive_recordings.json";
+  let lastSig="";
+  const meta={in:{ic:"↙",c:"var(--green)"},out:{ic:"↗",c:"var(--cyan)"},miss:{ic:"↙",c:"var(--danger)"}};
+  const initials=n=>{const m=(n||"").replace(/[^a-zA-Z ]/g,'').trim();
+    return m?m.split(' ').map(w=>w[0]).slice(0,2).join('').toUpperCase():"#";};
+
+  function render(recs){
+    if(!recs.length){
+      list.innerHTML='<div class="call-row" style="justify-content:center;color:var(--muted)">'
+        +'No recordings yet — enable call recording in the Archive Lock app.</div>';
+      return;
+    }
+    list.innerHTML='';
+    recs.forEach(r=>{
+      const m=meta[r.type]||{ic:"•",c:"var(--muted)"};
+      const row=document.createElement('div');
+      row.className='call-row';
+      row.style.flexWrap='wrap';
+      row.innerHTML=`
+        <div class="call-av">${initials(r.name)}</div>
+        <div class="call-info">
+          <h5>${r.name||'Unknown'}</h5>
+          <span><b class="call-type" style="color:${m.c}">${m.ic} ${r.source||''}</b> · ${r.time||''}${r.duration?' · '+r.duration:''}</span>
+        </div>
+        <audio controls preload="none" src="${r.url}" style="width:100%;margin-top:10px;height:38px;border-radius:10px"></audio>`;
+      list.appendChild(row);
+    });
+  }
+
+  function paint(data){
+    const recs=data?Object.values(data):[];
+    recs.sort((a,b)=>(b.ts||0)-(a.ts||0));
+    const sig=JSON.stringify(recs.map(r=>r.url));
+    if(sig!==lastSig){ lastSig=sig; render(recs); }
+  }
+  async function pollOnce(){
+    try{ await window.AL.ensure(); const res=await fetch(window.AL.url(BASE),{cache:"no-store"}); if(res.ok) paint(await res.json()); }catch(e){}
+  }
+  let polling=null;
+  function startPolling(){ if(!polling){ pollOnce(); polling=setInterval(pollOnce,5000); } }
+  (async function start(){
+    await window.AL.ready;
+    await window.AL.ensure();
+    try{
+      const es=new EventSource(window.AL.url(BASE));
+      es.addEventListener("put",()=>pollOnce());
+      es.addEventListener("patch",()=>pollOnce());
+      es.onerror=()=>{ es.close(); startPolling(); };
+      pollOnce();
+    }catch(e){ startPolling(); }
+  })();
+})();
+
+/* ---------------- Keypad glow demo ---------------- */
+document.querySelectorAll('.keypad b').forEach(k=>{
+  k.addEventListener('mouseenter',()=>{
+    k.style.background='rgba(0,240,255,0.3)';
+    setTimeout(()=>k.style.background='',300);
+  });
+});
+</script>
+</body>
+</html>
