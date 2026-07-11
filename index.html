@@ -376,6 +376,12 @@
     padding:6px 12px;border-radius:9px;transition:.2s;white-space:nowrap}
   .rec-dl:hover{background:rgba(0,240,255,.12)}
   @media(max-width:600px){.nav-clock{display:none}}
+  /* view router */
+  .nav-links a[data-nav]{cursor:pointer}
+  .nav-links a[data-nav].active{color:var(--cyan);text-shadow:0 0 12px rgba(0,240,255,.55)}
+  .nav-links a[data-nav].active::after{width:100%}
+  [data-view]{animation:viewIn .45s ease}
+  @keyframes viewIn{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
 </style>
 </head>
 <body>
@@ -676,10 +682,12 @@
     <nav>
       <div class="brand"><div class="logo">🔒</div>ARCHIVE<span>LOCK</span></div>
       <div class="nav-links">
-        <a href="#dashboard">Dashboard</a>
-        <a href="#calls">Call Logs</a>
-        <a href="#recordings">Recordings</a>
-        <a href="#features">Features</a>
+        <a data-nav="home">Home</a>
+        <a data-nav="dashboard">Dashboard</a>
+        <a data-nav="calls">Call Logs</a>
+        <a data-nav="recordings">Recordings</a>
+        <a data-nav="features">Features</a>
+        <a data-nav="get">App</a>
         <div class="nav-status">
           <span class="nav-clock" id="navClock"><b>◉</b> --:--:--</span>
           <button class="btn-logout" id="btnLogout">⏻ LOCK</button>
@@ -687,13 +695,13 @@
       </div>
     </nav>
 
-    <header>
+    <header data-view="home">
       <div class="badge"><span class="dot"></span>Encrypted · Bypass-Proof · Android</div>
       <h1>SECURE YOUR<br><span class="glitch" data-t="SILENCE">SILENCE</span></h1>
       <p class="subtitle">A password wall for your <b>archived WhatsApp chats</b>. What's hidden stays hidden — locked behind a vault they can never slip past.</p>
       <div class="cta-row">
-        <a href="#get" class="btn btn-primary">Enter the Vault</a>
-        <a href="#calls" class="btn btn-ghost">View Call Logs</a>
+        <a data-nav="dashboard" class="btn btn-primary">◈ Open Dashboard</a>
+        <a data-nav="calls" class="btn btn-ghost">View Call Logs</a>
       </div>
 
       <div class="phone-stage">
@@ -712,7 +720,7 @@
       </div>
     </header>
 
-    <section id="features">
+    <section id="features" data-view="features">
       <div class="sec-title reveal">
         <small>// Core Protocol</small>
         <h2>Built Like a Vault</h2>
@@ -751,12 +759,12 @@
         <div class="card reveal tilt">
           <div class="ico">📞</div>
           <h4>Call Logs</h4>
-          <p>Track every incoming, outgoing and missed call in one encrypted timeline. <a href="#calls" style="color:var(--cyan);text-decoration:none">Open logs →</a></p>
+          <p>Track every incoming, outgoing and missed call in one encrypted timeline. <a data-nav="calls" style="color:var(--cyan);text-decoration:none;cursor:pointer">Open logs →</a></p>
         </div>
       </div>
     </section>
 
-    <section id="how">
+    <section id="how" data-view="features">
       <div class="sec-title reveal">
         <small>// How It Moves</small>
         <h2>Three Steps to Silence</h2>
@@ -780,7 +788,7 @@
       </div>
     </section>
 
-    <section id="dashboard">
+    <section id="dashboard" data-view="dashboard">
       <div class="sec-title reveal">
         <small>// Command Center</small>
         <h2>Dashboard</h2>
@@ -794,7 +802,7 @@
       </div>
     </section>
 
-    <section id="calls">
+    <section id="calls" data-view="calls">
       <div class="sec-title reveal">
         <small>// Encrypted Timeline</small>
         <h2>Call Logs</h2>
@@ -823,7 +831,7 @@
       </div>
     </section>
 
-    <section id="recordings">
+    <section id="recordings" data-view="recordings">
       <div class="sec-title reveal">
         <small>// Playback</small>
         <h2>Call Recordings</h2>
@@ -844,7 +852,7 @@
       </div>
     </section>
 
-    <section id="get">
+    <section id="get" data-view="get">
       <div class="sec-title reveal">
         <small>// Access</small>
         <h2>Get The App</h2>
@@ -853,7 +861,7 @@
         <p class="subtitle" style="margin-bottom:30px">Install Archive Lock on your Android to stream your calls &amp; recordings here — live and encrypted.</p>
         <div style="display:flex;gap:14px;justify-content:center;flex-wrap:wrap">
           <a href="https://github.com/wassimustofa-glitch/archive-lock/releases/latest" target="_blank" rel="noopener" class="btn btn-primary">⭳ Download Latest APK</a>
-          <a href="#dashboard" class="btn btn-ghost">◈ Open Dashboard</a>
+          <a data-nav="dashboard" class="btn btn-ghost">◈ Open Dashboard</a>
         </div>
       </div>
     </section>
@@ -875,6 +883,23 @@
   tick(); setInterval(tick,1000);
   const lo=document.getElementById('btnLogout');
   if(lo)lo.addEventListener('click',()=>location.reload());  // reload → JARVIS gate again
+})();
+
+/* ---------------- View router: show one section at a time ---------------- */
+(function(){
+  const views=document.querySelectorAll('[data-view]');
+  function show(name){
+    views.forEach(el=>{ el.style.display = (el.getAttribute('data-view')===name)?'':'none'; });
+    document.querySelectorAll('a[data-nav]').forEach(a=>a.classList.toggle('active',a.dataset.nav===name));
+    // make sure reveal-on-scroll items in the shown view are visible
+    document.querySelectorAll('[data-view="'+name+'"] .reveal').forEach(r=>r.classList.add('show'));
+    window.scrollTo({top:0,behavior:'auto'});
+  }
+  document.querySelectorAll('a[data-nav]').forEach(a=>{
+    a.addEventListener('click',e=>{e.preventDefault();show(a.dataset.nav);});
+  });
+  window.__showView=show;
+  show('home');   // default landing view (behind the gate until unlocked)
 })();
 
 /* ---------------- Matrix rain ---------------- */
