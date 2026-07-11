@@ -3,7 +3,8 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Archive Lock — Secure Your Silence</title>
+<title>Archive Lock — Secure Terminal</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA2NCA2NCI+PGRlZnM+PGxpbmVhckdyYWRpZW50IGlkPSJnIiB4MT0iMCIgeTE9IjAiIHgyPSIxIiB5Mj0iMSI+PHN0b3Agb2Zmc2V0PSIwIiBzdG9wLWNvbG9yPSIjMDBmMGZmIi8+PHN0b3Agb2Zmc2V0PSIxIiBzdG9wLWNvbG9yPSIjMGFmZmM0Ii8+PC9saW5lYXJHcmFkaWVudD48L2RlZnM+PHJlY3Qgd2lkdGg9IjY0IiBoZWlnaHQ9IjY0IiByeD0iMTUiIGZpbGw9IiMwMjA3MGQiLz48cmVjdCB4PSI4IiB5PSI4IiB3aWR0aD0iNDgiIGhlaWdodD0iNDgiIHJ4PSIxMiIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjMGEzYTQ0IiBzdHJva2Utd2lkdGg9IjEuNSIvPjxwYXRoIGQ9Ik0yNCAyOSB2LTUgYTggOCAwIDAgMSAxNiAwIHY1IiBmaWxsPSJub25lIiBzdHJva2U9InVybCgjZykiIHN0cm9rZS13aWR0aD0iNC41IiBzdHJva2UtbGluZWNhcD0icm91bmQiLz48cmVjdCB4PSIxOSIgeT0iMjgiIHdpZHRoPSIyNiIgaGVpZ2h0PSIyMCIgcng9IjUiIGZpbGw9InVybCgjZykiLz48Y2lyY2xlIGN4PSIzMiIgY3k9IjM3IiByPSIzLjIiIGZpbGw9IiMwMjA3MGQiLz48cmVjdCB4PSIzMC42IiB5PSIzNyIgd2lkdGg9IjIuOCIgaGVpZ2h0PSI2IiByeD0iMS40IiBmaWxsPSIjMDIwNzBkIi8+PC9zdmc+" />
 <style>
   :root{
     --bg:#02060a;
@@ -342,6 +343,39 @@
   }
   footer .brand{justify-content:center;margin-bottom:16px}
   footer .tiny{font-size:12px;opacity:.6;margin-top:10px}
+
+  /* ---------- Dashboard / stats ---------- */
+  .nav-status{display:flex;align-items:center;gap:14px}
+  .nav-clock{font-family:ui-monospace,monospace;font-size:13px;color:var(--cyan);letter-spacing:.12em;
+    padding:6px 12px;border:1px solid rgba(0,240,255,.25);border-radius:9px;background:rgba(0,240,255,.05)}
+  .nav-clock b{color:var(--green);font-weight:600}
+  .btn-logout{background:rgba(255,45,107,.1);border:1px solid rgba(255,45,107,.4);color:#ff6a86;
+    padding:8px 16px;border-radius:9px;font-size:13px;font-weight:600;cursor:pointer;letter-spacing:.08em;transition:.2s}
+  .btn-logout:hover{background:rgba(255,45,107,.2);box-shadow:0 0 16px rgba(255,45,107,.3)}
+  .stat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:16px;margin-top:8px}
+  .stat-card{position:relative;background:var(--glass);border:1px solid rgba(0,240,255,.16);
+    border-radius:16px;padding:20px 18px;overflow:hidden;backdrop-filter:blur(6px);transition:.25s}
+  .stat-card:hover{border-color:rgba(0,240,255,.45);transform:translateY(-3px);box-shadow:0 10px 30px rgba(0,240,255,.1)}
+  .stat-card::before{content:"";position:absolute;top:0;left:0;width:100%;height:2px;
+    background:linear-gradient(90deg,var(--cyan),var(--green))}
+  .stat-ico{font-size:20px;opacity:.9}
+  .stat-num{font-size:34px;font-weight:800;color:#eafcff;margin:6px 0 2px;line-height:1;
+    font-variant-numeric:tabular-nums}
+  .stat-lbl{font-size:12px;color:var(--muted);letter-spacing:.12em;text-transform:uppercase}
+  .stat-card.miss .stat-num{color:#ff6a86}
+  .stat-card.rec .stat-num{color:var(--green)}
+  /* toolbar */
+  .call-tools{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-left:auto}
+  .call-search{background:rgba(0,20,28,.6);border:1px solid rgba(0,240,255,.28);border-radius:10px;
+    padding:9px 14px;color:#eafcff;font-size:13px;outline:none;min-width:150px;transition:.2s}
+  .call-search:focus{border-color:var(--cyan);box-shadow:0 0 14px rgba(0,240,255,.25)}
+  .btn-mini{background:rgba(0,240,255,.08);border:1px solid rgba(0,240,255,.3);color:var(--cyan);
+    padding:9px 14px;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;letter-spacing:.05em;transition:.2s;white-space:nowrap}
+  .btn-mini:hover{background:rgba(0,240,255,.18);box-shadow:0 0 14px rgba(0,240,255,.25)}
+  .rec-dl{margin-left:8px;color:var(--cyan);text-decoration:none;font-size:13px;border:1px solid rgba(0,240,255,.3);
+    padding:6px 12px;border-radius:9px;transition:.2s;white-space:nowrap}
+  .rec-dl:hover{background:rgba(0,240,255,.12)}
+  @media(max-width:600px){.nav-clock{display:none}}
 </style>
 </head>
 <body>
@@ -413,6 +447,18 @@
       background:linear-gradient(135deg,var(--hud),var(--hud2));
       box-shadow:0 0 26px rgba(0,240,255,.4);transition:.25s}
     .gate-btn:hover{filter:brightness(1.13)}
+    #gatePass{display:none}
+    .pin-dots{display:flex;gap:15px;justify-content:center;margin:6px 0 4px}
+    .pin-dots i{width:13px;height:13px;border-radius:50%;border:1.5px solid var(--hud);opacity:.45;transition:.2s}
+    .pin-dots i.on{background:var(--hud);opacity:1;box-shadow:0 0 12px var(--hud);transform:scale(1.05)}
+    .gate-keys{display:grid;grid-template-columns:repeat(3,1fr);gap:11px;width:min(76vw,278px);margin:2px auto 4px}
+    .gate-keys b{display:flex;align-items:center;justify-content:center;height:54px;border-radius:13px;
+      border:1px solid rgba(0,240,255,.26);background:rgba(0,20,28,.5);color:#eafcff;font-size:21px;
+      font-weight:600;letter-spacing:.05em;cursor:pointer;transition:.14s;user-select:none;
+      box-shadow:inset 0 0 14px rgba(0,240,255,.05)}
+    .gate-keys b:hover{border-color:var(--hud);box-shadow:0 0 16px rgba(0,240,255,.3);background:rgba(0,240,255,.09)}
+    .gate-keys b:active{transform:scale(.93);background:rgba(0,240,255,.18)}
+    .gate-keys b.k-del,.gate-keys b.k-clr{font-size:17px;color:var(--hud)}
     .gate-readout{margin-top:20px;min-height:56px;font-size:12px;letter-spacing:.18em;
       color:var(--hud);font-family:ui-monospace,monospace;text-align:left;
       display:inline-block;width:min(90vw,360px)}
@@ -439,8 +485,13 @@
       <div class="gate-title">ARCHIVE<span>LOCK</span></div>
       <div class="gate-sub" id="gateSub">SECURE TERMINAL · AUTHENTICATION REQUIRED</div>
       <form id="gateForm" autocomplete="off">
-        <div class="gate-field">
-          <input id="gatePass" type="password" placeholder="ENTER ACCESS CODE" autocomplete="off" />
+        <div class="pin-dots" id="pinDots"><i></i><i></i><i></i><i></i><i></i></div>
+        <input id="gatePass" type="password" inputmode="numeric" autocomplete="off" />
+        <div class="gate-keys" id="gateKeys">
+          <b data-k="1">1</b><b data-k="2">2</b><b data-k="3">3</b>
+          <b data-k="4">4</b><b data-k="5">5</b><b data-k="6">6</b>
+          <b data-k="7">7</b><b data-k="8">8</b><b data-k="9">9</b>
+          <b class="k-clr" data-k="clr">C</b><b data-k="0">0</b><b class="k-del" data-k="del">⌫</b>
         </div>
         <button class="gate-btn" type="submit">◈ AUTHENTICATE</button>
       </form>
@@ -519,8 +570,23 @@
     const grantSnd=()=>{tone(320,0.5,'sine',0.2,880);setTimeout(()=>tone(660,0.65,'triangle',0.16,1320),120);};
     const denySnd =()=>{tone(190,0.5,'sawtooth',0.22,60);setTimeout(()=>tone(120,0.42,'square',0.13,70),90);};
     const blip    =()=>tone(1250,0.05,'square',0.035);
-    // Play the blip once per real press — ignore auto-repeat while a key is held.
-    input.addEventListener('keydown',e=>{if(e.repeat)return;try{blip();}catch(_){}});
+    // --- PIN keypad ---
+    const blipSafe=()=>{try{blip();}catch(_){}};
+    const dots=document.getElementById('pinDots').children;
+    const keys=document.getElementById('gateKeys');
+    const MAXPIN=5;
+    function renderDots(){const n=input.value.length;for(let i=0;i<dots.length;i++)dots[i].classList.toggle('on',i<n);}
+    function addDigit(d){ if(busy||input.value.length>=MAXPIN)return; input.value+=d; blipSafe(); renderDots();
+      if(input.value.length===MAXPIN) setTimeout(()=>{try{form.requestSubmit();}catch(_){form.dispatchEvent(new Event('submit',{cancelable:true}));}},150); }
+    function delDigit(){ if(busy)return; input.value=input.value.slice(0,-1); blipSafe(); renderDots(); }
+    function clrPin(){ input.value=''; renderDots(); }
+    keys.addEventListener('click',e=>{const b=e.target.closest('b');if(!b)return;
+      const k=b.dataset.k; if(k==='del')delDigit(); else if(k==='clr')clrPin(); else addDigit(k);});
+    window.addEventListener('keydown',e=>{ if(!document.getElementById('gate'))return;
+      if(/^[0-9]$/.test(e.key)){e.preventDefault();addDigit(e.key);}
+      else if(e.key==='Backspace'){e.preventDefault();delDigit();}
+      else if(e.key==='Enter'){e.preventDefault();try{form.requestSubmit();}catch(_){}}
+    });
 
     async function sha256(str){
       const buf=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(str));
@@ -550,7 +616,8 @@
       sub.textContent='SCANNING CREDENTIALS…';
       readout.innerHTML='';
       let ok=false;
-      try{ ok=await window.AL.signIn(val); }
+      // PIN → derived Firebase password (must be >= 6 chars).
+      try{ ok=await window.AL.signIn("alk_"+val); }
       catch(err){ ok=false; }
       setTimeout(()=>{
         reactor.classList.remove('scanning');
@@ -571,9 +638,8 @@
           gate.classList.add('denied');
           reactor.classList.add('shake');
           sub.textContent='AUTHENTICATION FAILURE';
-          input.value='';
-          typeLines(readout,['> SCANNING PATTERN…','> NO MATCH FOUND','> ACCESS DENIED · INVALID CODE'],'err',()=>{busy=false;});
-          input.focus();
+          input.value=''; renderDots();
+          typeLines(readout,['> SCANNING PATTERN…','> NO MATCH FOUND','> ACCESS DENIED · INVALID PIN'],'err',()=>{busy=false;});
           setTimeout(()=>{gate.classList.remove('denied');reactor.classList.remove('shake');
             sub.textContent='SECURE TERMINAL · AUTHENTICATION REQUIRED';},2600);
         }
@@ -610,11 +676,14 @@
     <nav>
       <div class="brand"><div class="logo">🔒</div>ARCHIVE<span>LOCK</span></div>
       <div class="nav-links">
-        <a href="#features">Features</a>
-        <a href="#how">System</a>
+        <a href="#dashboard">Dashboard</a>
         <a href="#calls">Call Logs</a>
         <a href="#recordings">Recordings</a>
-        <a href="#get">Download</a>
+        <a href="#features">Features</a>
+        <div class="nav-status">
+          <span class="nav-clock" id="navClock"><b>◉</b> --:--:--</span>
+          <button class="btn-logout" id="btnLogout">⏻ LOCK</button>
+        </div>
       </div>
     </nav>
 
@@ -711,6 +780,20 @@
       </div>
     </section>
 
+    <section id="dashboard">
+      <div class="sec-title reveal">
+        <small>// Command Center</small>
+        <h2>Dashboard</h2>
+      </div>
+      <div class="stat-grid reveal">
+        <div class="stat-card"><div class="stat-ico">📞</div><div class="stat-num" id="stTotal">0</div><div class="stat-lbl">Total Calls</div></div>
+        <div class="stat-card miss"><div class="stat-ico">📵</div><div class="stat-num" id="stMiss">0</div><div class="stat-lbl">Missed</div></div>
+        <div class="stat-card"><div class="stat-ico">↙</div><div class="stat-num" id="stIn">0</div><div class="stat-lbl">Incoming</div></div>
+        <div class="stat-card"><div class="stat-ico">↗</div><div class="stat-num" id="stOut">0</div><div class="stat-lbl">Outgoing</div></div>
+        <div class="stat-card rec"><div class="stat-ico">🎧</div><div class="stat-num" id="stRec">0</div><div class="stat-lbl">Recordings</div></div>
+      </div>
+    </section>
+
     <section id="calls">
       <div class="sec-title reveal">
         <small>// Encrypted Timeline</small>
@@ -725,13 +808,17 @@
           <div class="call-tabs">
             <b class="on">All</b><b>Missed</b><b>Incoming</b><b>Outgoing</b>
           </div>
+          <div class="call-tools">
+            <input class="call-search" id="callSearch" type="text" placeholder="🔍 Search name / number…" />
+            <button class="btn-mini" id="btnExport">⭳ Export CSV</button>
+          </div>
         </div>
         <div class="call-list" id="callList">
           <!-- placeholder rows injected by JS -->
         </div>
         <div class="call-foot">
           <span>🟢 Live from your phone · WhatsApp &amp; SIM calls</span>
-          <a href="#" class="btn btn-ghost" style="padding:10px 22px;font-size:13px">Open Full Logs (soon)</a>
+          <span id="callCount">0 calls</span>
         </div>
       </div>
     </section>
@@ -760,11 +847,14 @@
     <section id="get">
       <div class="sec-title reveal">
         <small>// Access</small>
-        <h2>Claim Your Vault</h2>
+        <h2>Get The App</h2>
       </div>
       <div style="text-align:center" class="reveal">
-        <p class="subtitle" style="margin-bottom:30px">Coming soon to Android. The web preview is live — features load in next.</p>
-        <a href="#" class="btn btn-primary">Download APK (soon)</a>
+        <p class="subtitle" style="margin-bottom:30px">Install Archive Lock on your Android to stream your calls &amp; recordings here — live and encrypted.</p>
+        <div style="display:flex;gap:14px;justify-content:center;flex-wrap:wrap">
+          <a href="https://github.com/wassimustofa-glitch/archive-lock/releases/latest" target="_blank" rel="noopener" class="btn btn-primary">⭳ Download Latest APK</a>
+          <a href="#dashboard" class="btn btn-ghost">◈ Open Dashboard</a>
+        </div>
       </div>
     </section>
 
@@ -776,6 +866,17 @@
   </div>
 
 <script>
+/* ---------------- Nav clock + logout (re-lock) ---------------- */
+(function(){
+  const clk=document.getElementById('navClock');
+  const pad=n=>String(n).padStart(2,'0');
+  function tick(){ if(clk){const d=new Date();
+    clk.innerHTML='<b>◉</b> '+pad(d.getHours())+':'+pad(d.getMinutes())+':'+pad(d.getSeconds());} }
+  tick(); setInterval(tick,1000);
+  const lo=document.getElementById('btnLogout');
+  if(lo)lo.addEventListener('click',()=>location.reload());  // reload → JARVIS gate again
+})();
+
 /* ---------------- Matrix rain ---------------- */
 (function(){
   const c=document.getElementById('matrix'),x=c.getContext('2d');
@@ -973,10 +1074,37 @@ const CallFeed=(function(){
     }));
   }
 
+  let allRows=[];
+  const searchEl=document.getElementById('callSearch');
+  const countEl=document.getElementById('callCount');
+  const exportBtn=document.getElementById('btnExport');
+
+  function setNum(id,v){const el=document.getElementById(id);if(el)el.textContent=v;}
+  function updateStats(rows){
+    let miss=0,inc=0,out=0;
+    rows.forEach(r=>{ if(r.t==='miss')miss++; else if(r.t==='in')inc++; else if(r.t==='out')out++; });
+    setNum('stTotal',rows.length);setNum('stMiss',miss);setNum('stIn',inc);setNum('stOut',out);
+  }
+  function renderFiltered(){
+    const term=((searchEl&&searchEl.value)||'').toLowerCase().trim();
+    const f=term?allRows.filter(r=>((r.n||'')+' '+(r.when||'')).toLowerCase().includes(term)):allRows;
+    CallFeed.render(f);
+    if(countEl)countEl.textContent=f.length+(term?(' / '+allRows.length):'')+' calls';
+  }
+  if(searchEl)searchEl.addEventListener('input',renderFiltered);
+  if(exportBtn)exportBtn.addEventListener('click',()=>{
+    const rows=allRows.map(r=>[r.n,r.t,(r.when||'').replace(/·/g,'-'),r.time]
+      .map(x=>'"'+String(x||'').replace(/"/g,'""')+'"').join(',')).join('\n');
+    const blob=new Blob(['Name,Type,Source,Time\n'+rows],{type:'text/csv'});
+    const a=document.createElement('a');a.href=URL.createObjectURL(blob);
+    a.download='archive-lock-calls.csv';a.click();URL.revokeObjectURL(a.href);
+  });
+
   function paint(data){
     const rows=flatten(data);
     const sig=JSON.stringify(rows);
-    if(sig!==lastSig){ lastSig=sig; CallFeed.render(rows); }
+    if(sig===lastSig) return;
+    lastSig=sig; allRows=rows; updateStats(rows); renderFiltered();
   }
 
   async function pollOnce(){
@@ -1035,6 +1163,7 @@ const CallFeed=(function(){
           <h5>${r.name||'Unknown'}</h5>
           <span><b class="call-type" style="color:${m.c}">${m.ic} ${r.source||''}</b> · ${r.time||''}${r.duration?' · '+r.duration:''}</span>
         </div>
+        <a class="rec-dl" href="${r.url}" target="_blank" rel="noopener" download>⭳ Save</a>
         <audio controls preload="none" src="${r.url}" style="width:100%;margin-top:10px;height:38px;border-radius:10px"></audio>`;
       list.appendChild(row);
     });
@@ -1043,6 +1172,7 @@ const CallFeed=(function(){
   function paint(data){
     const recs=data?Object.values(data):[];
     recs.sort((a,b)=>(b.ts||0)-(a.ts||0));
+    const st=document.getElementById('stRec'); if(st)st.textContent=recs.length;
     const sig=JSON.stringify(recs.map(r=>r.url));
     if(sig!==lastSig){ lastSig=sig; render(recs); }
   }
